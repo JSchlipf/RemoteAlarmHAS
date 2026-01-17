@@ -9,10 +9,16 @@ play_internet_radio:
             - condition: state
               entity_id: media_player.kitchen_speaker  # Replace with your smart speaker's entity ID
               state: "playing"
+            - condition: not
+              conditions:
+                - condition: state
+                  entity_id: media_player.kitchen_speaker
+                  state: "unavailable"
           sequence:
             - service: media_player.media_stop
               target:
                 entity_id: media_player.kitchen_speaker
+              continue_on_error: true  # Continue even if stop times out
       default:
         - service: media_player.play_media
           target:
@@ -20,6 +26,7 @@ play_internet_radio:
           data:
             media_content_id: "https://nwm-lb-4.streamguys1.com/WCIC-MP3"  # Replace with the URL of the radio stream
             media_content_type: "music"
+          continue_on_error: true  # Continue even if play fails
             
             
 play_radio_at_time:
@@ -49,14 +56,39 @@ play_radio_at_time:
         entity_id: media_player.kitchen_speaker
       data:
         media_content_id: "https://nwm-lb-4.streamguys1.com/WCIC-MP3"  # Replace with the URL of the radio stream
-        media_content_type: "music"
+        media_content_type: "audio/mpeg"  # Changed from "music" - Chromecast may need this
+    - delay: "00:00:05"  # Wait 5 seconds for playback to start before monitoring
     - repeat:
         count: 19  # Increase volume 19 times (5% to 100%)
         sequence:
-          - delay: "00:00:20"  # Wait 20 seconds
+          - repeat:
+              count: 20  # Check every second for 20 seconds
+              sequence:
+                - choose:
+                  - conditions:
+                      - condition: not
+                        conditions:
+                          - condition: state
+                            entity_id: media_player.kitchen_speaker
+                            state: "playing"
+                      - condition: not
+                        conditions:
+                          - condition: state
+                            entity_id: media_player.kitchen_speaker
+                            state: "unavailable"
+                    sequence:
+                      - service: media_player.play_media
+                        target:
+                          entity_id: media_player.kitchen_speaker
+                        data:
+                          media_content_id: "https://nwm-lb-4.streamguys1.com/WCIC-MP3"  # Replace with the URL of the radio stream
+                          media_content_type: "audio/mpeg"  # Changed from "music" - Chromecast may need this
+                        continue_on_error: true  # Continue even if play fails
+                      - delay: "00:00:02"  # Wait 2 seconds after restarting playback
+                - delay: "00:00:01"  # Wait 1 second between checks
           - service: media_player.volume_set
             target:
               entity_id: media_player.kitchen_speaker
             data:
               volume_level: >
-                {{ state_attr('media_player.kitchen_speaker', 'volume_level') + 0.05 }}
+                {{ [state_attr('media_player.kitchen_speaker', 'volume_level') + 0.05, 1.0] | min }}
