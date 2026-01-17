@@ -1,0 +1,47 @@
+version: '2.1'
+
+services:
+  homeassistant:
+    build: ./homeassistant
+    container_name: homeassistant
+    volumes:
+      - homeassistant_data:/config
+    restart: always
+    privileged: true
+    network_mode: host
+    labels:
+      io.balena.features.dbus: '1'
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.firmware: '1'
+      io.balena.features.supervisor-api: '1'
+      io.balena.features.balena-api: '1'
+    environment:
+      - TZ=${TZ:-UTC}
+      - SSH_ROOT_PASSWORD=${SSH_ROOT_PASSWORD:-root}
+
+  code-server:
+    build: ./code-server
+    container_name: code-server
+    volumes:
+      - code-server_data:/home/coder
+    restart: always
+    network_mode: host
+    environment:
+      - PASSWORD=${CODE_SERVER_PASSWORD:-coder}
+      - TZ=${TZ:-UTC}
+    command: --bind-addr 0.0.0.0:8080 --auth password
+
+  nginx:
+    build: ./nginx
+    container_name: nginx-proxy
+    depends_on:
+      - homeassistant
+      - code-server
+    network_mode: host
+    restart: always
+    labels:
+      io.balena.features.balena-api: '1'
+
+volumes:
+  homeassistant_data:
+  code-server_data:

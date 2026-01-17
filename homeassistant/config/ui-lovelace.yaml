@@ -1,0 +1,32 @@
+title: My Home
+views:
+  - title: Main
+    path: main
+    cards:
+      - type: button
+        entity: script.play_internet_radio
+        name: "Play Internet Radio"
+        icon: mdi:radio
+        show_state: false
+        tap_action:
+          action: call-service
+          service: script.play_internet_radio
+        
+      - type: weather-forecast
+        entity: weather.forecast_home
+        name: "Home Weather"
+        
+      - type: entities
+        title: Set Alarm Time
+        entities:
+          - entity: input_datetime.alarm_time
+            name: "Alarm Time"
+            
+      - type: button
+        entity: script.play_radio_at_time
+        name: "Play Radio at Alarm Time"
+        icon: mdi:alarm
+        show_state: false
+        tap_action:
+          action: call-service
+          service: script.play_radio_at_time

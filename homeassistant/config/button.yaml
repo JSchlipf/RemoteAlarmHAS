@@ -1,0 +1,12 @@
+- platform: template
+  buttons:
+    play_radio_button:
+      unique_id: play_radio_button_1
+      name: "Play Internet Radio"
+      press:
+        service: media_player.play_media
+        target:
+          entity_id: media_player.smart_speaker  # Replace with your smart speaker's entity ID
+        data:
+          media_content_id: "http://stream.example.com/radio"  # Replace with the URL of the radio stream
+          media_content_type: "music"
